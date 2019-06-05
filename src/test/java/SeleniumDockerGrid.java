@@ -1,5 +1,7 @@
+package test.java;
+
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
+//import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -21,11 +23,18 @@ public class SeleniumDockerGrid {
     @BeforeClass
     public static void openBrowser() throws MalformedURLException {
         DesiredCapabilities chromeCapabilities = DesiredCapabilities.chrome();
+        chromeCapabilities.setBrowserName("chrome");
+
+        //chromeCapabilities.setVersion("2.24");
+        //String driverPath = System.getProperty("user.dir") + "/build/webdriver/chromedriver/chromedriver";
+        //System.setProperty("webdriver.chrome.driver", driverPath);
+
 
         if(System.getProperty("webdriver.chrome.driver") != null)
             //driver = new ChromeDriver();
+            
+            //driver = new RemoteWebDriver(new URL("http://172.22.0.2:4444/wd/hub"), chromeCapabilities);
             driver = new RemoteWebDriver(new URL("http://172.22.0.2:4444/wd/hub"), chromeCapabilities);
-
         else if(System.getProperty("phantomjs_binary_path") != null)
             driver = new PhantomJSDriver();
         else

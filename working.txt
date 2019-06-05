@@ -1,0 +1,9 @@
+docker build -t testng .
+
+docker run -it  -v $PWD:/root/dev/myapp testng
+---
+testng_gradle image
+
+docker build -t testng_gradle -f Dockerfile.gradle .
+
+docker run -it -v $PWD:/home/node/ testng_gradle ./gradlew
