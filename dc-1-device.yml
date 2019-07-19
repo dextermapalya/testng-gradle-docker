@@ -1,0 +1,133 @@
+# Note: It requires docker-compose 1.13.0
+#
+# Usage: docker-compose up -d
+version: "3.7"
+
+services:
+  # Selenium hub
+  selenium_hub:
+    image: selenium/hub:3.141.59
+    ports:
+      - 4444:4444
+    networks:
+      - appium_selenium
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+
+
+  # Using Appium Docker Android  
+  real_device:
+    image: appium/appium
+    depends_on:
+      - selenium_hub
+    #network_mode: "service:selenium_hub"
+    networks:
+      - appium_selenium
+
+    privileged: true
+    volumes:
+      - /dev/bus/usb:/dev/bus/usb
+      - ~/.android:/root/.android
+      - $PWD:/root/tmp
+    environment:
+      - CONNECT_TO_GRID=true
+      - SELENIUM_HOST=selenium_hub
+      # Enable it for msite testing
+      #- BROWSER_NAME=chrome
+
+  # Docker-Android for Android application testing
+  nexus_7.1.1:
+    image: budtmo/docker-android-x86-7.1.1
+    privileged: true
+    # Increase scale number if needed
+    #scale: 1
+    depends_on:
+      - selenium_hub
+      - real_device
+    ports:
+      - 6080
+    networks:
+       - appium_selenium
+    # Change path of apk that you want to test. I use sample_apk that I provide in folder "example"
+    volumes:
+      - $PWD/example/sample_apk:/root/tmp/sample_apk
+      - ./video-nexus_7.1.1:/tmp/video
+    environment:
+      - DEVICE=Nexus 5
+      - CONNECT_TO_GRID=true
+      - APPIUM=true
+      - SELENIUM_HOST=selenium_hub
+      - AUTO_RECORD=true
+
+  chrome:
+    image: selenium/node-chrome:3.141.59
+    depends_on:
+      - selenium_hub
+    environment:
+      - HUB_PORT_4444_TCP_ADDR=hub
+      - HUB_PORT_4444_TCP_PORT=4444
+      - NODE_MAX_SESSION=1
+      - HUB_HOST=selenium-hub
+      - HUB_PORT=4444
+    entrypoint: bash -c 'SE_OPTS="-host $$HOSTNAME -port 5555" /opt/bin/entry_point.sh'
+    networks:
+      - appium_selenium
+    volumes:
+      - /dev/urandom:/dev/random
+    ports:
+      - 5555:5555
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+
+
+  firefox:
+    image: selenium/node-firefox:3.141.59
+    volumes:
+      - /dev/urandom:/dev/random
+    depends_on:
+      - selenium_hub
+    environment:
+      - HUB_PORT_4444_TCP_ADDR=hub
+      - HUB_PORT_4444_TCP_PORT=4444
+      - NODE_MAX_SESSION=1
+      - HUB_HOST=selenium-hub
+      - HUB_PORT=4444
+    entrypoint: bash -c 'SE_OPTS="-host $$HOSTNAME -port 5556" /opt/bin/entry_point.sh'
+    ports:
+      - 5556:5556
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+
+  gradle_testng:
+    build:
+      context: .
+      dockerfile: Dockerfile.gradle
+    privileged: true
+    depends_on:
+      - selenium_hub
+      - real_device
+      - firefox
+      - chrome
+    networks:
+      - appium_selenium
+    volumes:
+      - $PWD:/usr/app
+    environment:
+      - DEVICE=Nexus 5
+      - CONNECT_TO_GRID=true
+      - APPIUM=true
+      - SELENIUM_HOST=selenium_hub
+
+networks:
+  appium_selenium:
+    driver: bridge

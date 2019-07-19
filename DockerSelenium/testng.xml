@@ -1,0 +1,7 @@
+<suite name="softwaretestingmaterial">
+	<test name="testngTest">
+		<classes>
+			<class name="main.java.com.jcg.selenium.GoogleSearchTest.java" />
+		</classes>
+	</test>
+</suite>

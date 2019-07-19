@@ -1,0 +1,11 @@
+<suite name="softwaretestingmaterial">
+	<test name="testngTest">
+		<classes>
+                        <!--<class name="test.java.Dashboard" />-->
+                        <!--<class name="test.java.DashboardDateSelector" /> -->
+                        <class name="test.java.Navbar" />
+
+					
+		</classes>
+	</test>
+</suite>
